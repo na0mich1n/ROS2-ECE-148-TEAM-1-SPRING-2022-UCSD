@@ -207,6 +207,13 @@ class Calibration(Node):
         super().__init__(CALIBRATION_NODE_NAME)
         self.twist_publisher = self.create_publisher(Twist, ACTUATOR_TOPIC_NAME, 10)
         self.twist_cmd = Twist()
+        
+        #My personal attempt at making this publish a specific value
+        self.publisher_ = self.create_publisher(Float32, CALIBRATION_NODE_NAME, 10)
+        timer_period = 0.5  # seconds
+        self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.i = 0
+        
         self.camera_subscriber = self.create_subscription(Image, CAMERA_TOPIC_NAME, self.live_calibration_values, 10)
         self.camera_subscriber
         self.bridge = CvBridge()
@@ -584,7 +591,14 @@ class Calibration(Node):
         # Finding contours in image
         contours_gold, dummy = cv2.findContours(blackAndWhiteImage_gold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contours_silver, dummy = cv2.findContours(blackAndWhiteImage_silver, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-
+        
+        #My personal attampt at publishing the silver contour value 
+        msg = Float32()
+        msg.data = self.i
+        self.publisher_.publish(msg)
+        self.get_logger().info(msg.data)
+        self.i  = len(contours_silver)
+        
         # Creating points to be drawn on image
         cam_center_line_x = int(image_width * self.camera_centerline)
         start_point = (cam_center_line_x, 0)
@@ -821,29 +835,12 @@ class Calibration(Node):
                 data_c = data
             return data_c 
             
-class MinimalPublisher(Node):
-
-    def __init__(self):
-        super().__init__('minimal_publisher')
-        self.publisher_ = self.create_publisher(Float32, 'topic', 10)
-        timer_period = 0.5  # seconds
-        self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.i = 0
-
-    def timer_callback(self):
-        msg = Float32()
-        msg.data = self.i
-        self.publisher_.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.data)
-        self.i  = len(contours_silver)
 
 def main(args=None):
     rclpy.init(args=args)
     CAL_publisher = Calibration()
-    minimal_publisher = MinimalPublisher()
     try:
         rclpy.spin(CAL_publisher)
-        rclpy.spin(minimal_publisher)
         CAL_publisher.destroy_node()
         rclpy.shutdown()
     except KeyboardInterrupt:
@@ -856,7 +853,6 @@ def main(args=None):
         # Kill cv2 windows and node
         cv2.destroyAllWindows()
         CAL_publisher.destroy_node()
-        minimal_publisher.destroy_node()
         rclpy.shutdown()
         print(f"{CALIBRATION_NODE_NAME} shut down successfully.")
 
