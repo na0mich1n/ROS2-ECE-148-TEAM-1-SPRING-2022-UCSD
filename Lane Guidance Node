@@ -8,6 +8,19 @@ NODE_NAME = 'lane_guidance_node'
 CENTROID_TOPIC_NAME = '/centroid'
 ACTUATOR_TOPIC_NAME = '/cmd_vel'
 
+class MinimalSubscriber(Node):
+
+    def __init__(self):
+        super().__init__('minimal_subscriber')
+        self.subscription = self.create_subscription(
+            Float32,
+            'topic',
+            self.listener_callback,
+            10)
+        self.subscription  # prevent unused variable warning
+
+    def listener_callback(self, msg):
+        self.get_logger().info('I heard: "%s"' % msg.data)
 
 class PathPlanner(Node):
     def __init__(self):
@@ -49,8 +62,10 @@ class PathPlanner(Node):
 def main(args=None):
     rclpy.init(args=args)
     path_planner_publisher = PathPlanner()
+    minimal_subscriber = MinimalSubscriber()
     try:
         rclpy.spin(path_planner_publisher)
+        rclpy.spin(minimal_subscriber)
         path_planner_publisher.destroy_node()
         rclpy.shutdown()
     except KeyboardInterrupt:
@@ -59,6 +74,7 @@ def main(args=None):
         path_planner_publisher.twist_publisher.publish(path_planner_publisher.twist_cmd)
         time.sleep(1)
         path_planner_publisher.destroy_node()
+        minimal_subscriber.destroy_node()
         rclpy.shutdown()
         path_planner_publisher.get_logger().info(f'{NODE_NAME} shut down successfully.')
 
