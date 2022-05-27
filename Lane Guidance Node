@@ -24,7 +24,7 @@ class PathPlanner(Node):
         self.subscription = self.create_subscription(
             Float32,
             CALIBRATION_NODE_NAME,
-            self.listener_callback,
+            self.motion,
             10)
         self.subscription  # prevent unused variable warning
         
@@ -41,7 +41,7 @@ class PathPlanner(Node):
         self.declare_parameters(
             
     #Here is a funciton I added for obstacle detection
-     def detect_obstacle(self, data):
+    def detect_obstacle(self, data):
         total_number_of_scans = len(data.ranges)
         scans_per_degree = float(total_number_of_scans/self.viewing_angle)
         angle_values = [1,5,10,15,20,25,30,35,40,45,50,55,60,65,355,350,345,340,335,330,325,320,315,310,305,300,295]
@@ -72,7 +72,20 @@ class PathPlanner(Node):
 
             
     #Here is my personal function that should properly set the motion of the car
-    def motion(self, msg, steering_float, throttle_float, obstacle_detected):
+    def motion(self, msg, steering_float, throttle_float):
+        #Here is how I want this code to go 
+        #IF OBJECT DETECTED, AKA if obstacle_detected == 1.0, find which angle the object is, 
+        #the variable "min_angle" from the detect_obstacle
+        #function should tell you what angle the object is located 
+        #There is a comment in the code of detect_obstacle that says that the min_angle variable is negative if
+        #the object is to the right and positive if the object is to the LEFT
+        #IF OBJECT NOT DETECTED, carry on with the code that is already in this function
+        #IF OBJECT TO THE LEFT, GO RIGHT
+        #IF OBJECT TO THE RIGHT, GO LEFT 
+        #IF OBJECT STRAIT AHEAD, IF WHITE CONTOURS > A SPECIFIC NUMBER, GO RIGHT
+        #ELSE GO LEFT
+        #I made this function have access to the contours_silver variable from the calibration node 
+        #I believe the variable that gives you the contours_siver variable is called msg.data
         try:
             # publish control signals
             self.twist_cmd.angular.z = steering_float
