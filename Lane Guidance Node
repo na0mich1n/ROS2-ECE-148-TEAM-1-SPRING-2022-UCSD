@@ -29,20 +29,6 @@ class PathPlanner(Node):
 
         # Default actuator values
         self.declare_parameters(
-
-        # Publish values
-        try:
-            # publish control signals
-            self.twist_cmd.angular.z = steering_float
-            self.twist_cmd.linear.x = throttle_float
-            self.twist_publisher.publish(self.twist_cmd)
-
-            # shift current time and error values to previous values
-            self.ek_1 = self.ek
-
-        except KeyboardInterrupt:
-            self.twist_cmd.linear.x = self.zero_throttle
-            self.twist_publisher.publish(self.twist_cmd)
             
     #Here is my personal function that should properly set the motion of the car
     def motion(self, msg, steering_float, throttle_float):
