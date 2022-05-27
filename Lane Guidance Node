@@ -3,11 +3,15 @@ from std_msgs.msg import Float32, Int32, Int32MultiArray
 from geometry_msgs.msg import Twist
 import time
 import os
+from sensor_msgs.msg import LaserScan
+import math
+
 
 NODE_NAME = 'lane_guidance_node'
 CALIBRATION_NODE_NAME = 'calibration_node'
 CENTROID_TOPIC_NAME = '/centroid'
 ACTUATOR_TOPIC_NAME = '/cmd_vel'
+SUBSCRIBER_TOPIC_NAME = '/LiDAR/LD06'
 
 
 class PathPlanner(Node):
@@ -24,14 +28,51 @@ class PathPlanner(Node):
             10)
         self.subscription  # prevent unused variable warning
         
+        #Subscriber to the Lidar 
+        self.sub = rospy.Subscriber(SUBSCRIBER_TOPIC_NAME, LaserScan, self.detect_obstacle)
+        self.viewing_angle = 360
+        self.max_distance_tolerance = 1.2
+        self.min_distance_tolerance = 0.15
+        
         self.centroid_subscriber = self.create_subscription(Float32, CENTROID_TOPIC_NAME, self.controller, 10)
         self.centroid_subscriber
 
         # Default actuator values
         self.declare_parameters(
             
+    #Here is a funciton I added for obstacle detection
+     def detect_obstacle(self, data):
+        total_number_of_scans = len(data.ranges)
+        scans_per_degree = float(total_number_of_scans/self.viewing_angle)
+        angle_values = [1,5,10,15,20,25,30,35,40,45,50,55,60,65,355,350,345,340,335,330,325,320,315,310,305,300,295]
+        range_values = []
+        for angle in angle_values:
+            bs = data.ranges[round(angle*scans_per_degree)]
+            if self.max_distance_tolerance >= bs >= self.min_distance_tolerance:
+                range_values.append(data.ranges[round(angle*scans_per_degree)])
+            else:
+                range_values.append(float(self.max_distance_tolerance)+1)
+        min_distance = min(range_values)
+        min_angle_index = range_values.index(min(range_values))
+        min_angle = angle_values[min_angle_index]
+        print('Min Distance %s at %s degrees.' %(str(min_distance),str(min_angle)))
+        obstacle_info = []
+        if self.max_distance_tolerance >= abs(min_distance) >= self.min_distance_tolerance:
+            #make the angle nuegative if its on the right side
+            if min_angle > 180: min_angle = min_angle - 360
+            angle_rad = (min_angle * math.pi) / 180
+            normalized_angle = math.sin(angle_rad)
+            obstacle_detected = 1.0
+        else:
+            # nonsense values
+            min_distance = -1.0
+            normalized_angle = -1.0
+            obstacle_detected = 0.0
+            
+
+            
     #Here is my personal function that should properly set the motion of the car
-    def motion(self, msg, steering_float, throttle_float):
+    def motion(self, msg, steering_float, throttle_float, obstacle_detected):
         try:
             # publish control signals
             self.twist_cmd.angular.z = steering_float
