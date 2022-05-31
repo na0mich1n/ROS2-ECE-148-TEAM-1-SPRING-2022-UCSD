@@ -559,14 +559,14 @@ class Calibration(Node):
 
         # Inverting color filter option
         if self.Inverted_filter_gold == 1:
-            bitwise_mask_gold = cv2.bitwise_and(hsv, hsv, mask_gold=cv2.bitwise_not(mask_gold))
+            bitwise_mask_gold = cv2.bitwise_and(hsv, hsv, mask=cv2.bitwise_not(mask_gold))
         else:
-            bitwise_mask_gold = cv2.bitwise_and(hsv, hsv, mask_gold=mask_gold)
+            bitwise_mask_gold = cv2.bitwise_and(hsv, hsv, mask=mask_gold)
             
         if self.Inverted_filter_silver == 1:
             bitwise_mask_silver = cv2.bitwise_and(hsv, hsv, mask=cv2.bitwise_not(mask_silver))
         else:
-            bitwise_mask_silver = cv2.bitwise_and(hsv, hsv, mask_silver=mask_silver)
+            bitwise_mask_silver = cv2.bitwise_and(hsv, hsv, mask=mask_silver)
 
 
         # Changing to gray color space
