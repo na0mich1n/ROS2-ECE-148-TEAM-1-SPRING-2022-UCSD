@@ -584,10 +584,10 @@ class Calibration(Node):
         kernel_silver = np.ones((self.kernal_size_silver, self.kernal_size_silver), np.uint8)
         blurred_gold = cv2.blur(blackAndWhiteImage_gold,(self.kernal_size_gold, self.kernal_size_gold))
         blurred_silver = cv2.blur(blackAndWhiteImage_silver,(self.kernal_size_silver, self.kernal_size_silver))
-        erosion_gold = cv2.erode(blurred_gold, kernel_gold, iterations_gold = self.erosion_itterations_gold)
-        erosion_silver = cv2.erode(blurred_silver, kernel_silver, iterations_silver = self.erosion_itterations_silver)
-        dilation_gold = cv2.dilate(erosion_gold, kernel_gold, iterations_gold = self.dilation_itterations_gold)
-        dilation_silver = cv2.dilate(erosion_silver, kernel_silver, iterations_silver = self.dilation_itterations_silver)
+        erosion_gold = cv2.erode(blurred_gold, kernel_gold, iterations = self.erosion_itterations_gold)
+        erosion_silver = cv2.erode(blurred_silver, kernel_silver, iterations = self.erosion_itterations_silver)
+        dilation_gold = cv2.dilate(erosion_gold, kernel_gold, iterations = self.dilation_itterations_gold)
+        dilation_silver = cv2.dilate(erosion_silver, kernel_silver, iterations = self.dilation_itterations_silver)
         
         
         
@@ -870,5 +870,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
 
