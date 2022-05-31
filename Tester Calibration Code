@@ -575,8 +575,8 @@ class Calibration(Node):
 
         # Changing to black and white color space
         gray_upper = 255
-        (dummy, blackAndWhiteImage_gold) = cv2.threshold(gray, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
-        (dummy, blackAndWhiteImage_silver) = cv2.threshold(gray, self.gray_lower_silver, gray_upper, cv2.THRESH_BINARY)
+        (dummy, blackAndWhiteImage_gold) = cv2.threshold(gray_gold, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
+        (dummy, blackAndWhiteImage_silver) = cv2.threshold(gray_silver, self.gray_lower_silver, gray_upper, cv2.THRESH_BINARY)
         # blackAndWhiteImage = cv2.adaptiveThreshold(gray, gray_upper, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
         
         # Get rid of white noise from grass
@@ -870,5 +870,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
 
