@@ -87,6 +87,43 @@ class PathPlanner(Node):
         #I made this function have access to the contours_silver variable from the calibration node 
         #I believe the variable that gives you the contours_siver variable is called msg.data
         try:
+            if obstacle_detected == 0.1:
+                #We are noe entering the part of the coder where we manuver around an object, these values can be tweaked
+                if min_angle > 0:
+                    #Cone is to the left
+                    if min_angle < 60:
+                        #This function is to make the car turn to the left side to begin moving around the cone
+                        self.twist_cmd.angular.z = 0.4
+                        self.twist_cmd.linear.x = 0.1
+                    else:
+                        #By now the car should be facing off to the left and is ready to make a curved path around the cone 
+                        self.twist_cmd.linear.x = 0.4 
+                        self.twist_cmd.angular.z = 0.2
+                else:
+                    #Cone is strait ahead or to the right
+                    if msg.data > 2:
+                        #The white line is dotted and we can go to the right 
+                        abs_min_angle = abs(min_angle) #This is to take into account that the angle will be negative if the object is to the left
+                        if abs_min_angle < 60:
+                            #The car will start turning to the right 
+                            self.twist_cmd.angular.z = -0.4
+                            self.twist_cmd.linear.x = 0.1 
+                        else:
+                            #Now the car is turned to the right side, it is time for it to make a curved path around the cone 
+                            self.twist_cmd.linear.x = 0.4 
+                            self.twist_cmd.angular.z = -0.2
+                    else:
+                        #The white line is solid and we need to go to the left 
+                        if min_angle < 60:
+                            #This function is to make the car turn to the left side to begin moving around the cone
+                            self.twist_cmd.angular.z = 0.4
+                            self.twist_cmd.linear.x = 0.1
+                        else:
+                            #By now the car should be facing off to the left and is ready to make a curved path around the cone 
+                            self.twist_cmd.linear.x = 0.4 
+                            self.twist_cmd.angular.z = 0.2
+            #Obstacle not detected, we can go forth with the follow the yellow line sequence
+            else:
             # publish control signals
             self.twist_cmd.angular.z = steering_float
             self.twist_cmd.linear.x = throttle_float
