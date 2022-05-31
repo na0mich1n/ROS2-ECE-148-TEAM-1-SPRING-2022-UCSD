@@ -240,7 +240,8 @@ class Calibration(Node):
                 ('Value_high_silver',1),
                 ('gray_lower_gold',1),
                 ('gray_lower_silver',1),
-                ('inverted_filter',0),
+                ('Inverted_filter_gold',0),
+                ('Inverted_filter_silver',0),
                 ('kernal_size',1),
                 ('erosion_itterations',1),
                 ('dilation_itterations',1),
@@ -335,13 +336,13 @@ class Calibration(Node):
             f'\nValue_high_silver: {self.Value_high_silver}'
             
             f'\ngray_lower_gold: {self.gray_lower_gold}'
-            f'\ninverted_filter_gold: {self.Inverted_filter_gold}'
+            f'\nInverted_filter_gold: {self.Inverted_filter_gold}'
             f'\nkernal_size_gold: {self.kernal_size_gold}'
             f'\nerosion_itterations_gold: {self.erosion_itterations_gold}'
             f'\ndilation_itterations_gold: {self.dilation_itterations_gold}'
             
             f'\ngray_lower_silver: {self.gray_lower_silver}'
-            f'\ninverted_filter_silver: {self.Inverted_filter_silver}'
+            f'\nInverted_filter_silver: {self.Inverted_filter_silver}'
             f'\nkernal_size_silver: {self.kernal_size_silver}'
             f'\nerosion_itterations_silver: {self.erosion_itterations_silver}'
             f'\ndilation_itterations_silver: {self.dilation_itterations_silver}'
@@ -554,12 +555,16 @@ class Calibration(Node):
         mask_silver = cv2.inRange(hsv, lower_silver, higher_silver)
 
         # Inverting color filter option
-        if self.inverted_filter == 1:
+        if self.Inverted_filter_gold == 1:
             bitwise_mask_gold = cv2.bitwise_and(hsv, hsv, mask_gold=cv2.bitwise_not(mask_gold))
-            bitwise_mask_silver = cv2.bitwise_and(hsv, hsv, mask=cv2.bitwise_not(mask_silver))
         else:
             bitwise_mask_gold = cv2.bitwise_and(hsv, hsv, mask_gold=mask_gold)
+            
+        if self.Inverted_filter_silver == 1:
+            bitwise_mask_silver = cv2.bitwise_and(hsv, hsv, mask=cv2.bitwise_not(mask_silver))
+        else:
             bitwise_mask_silver = cv2.bitwise_and(hsv, hsv, mask_silver=mask_silver)
+
 
         # Changing to gray color space
         gray_gold = cv2.cvtColor(bitwise_mask_gold, cv2.COLOR_BGR2GRAY)
@@ -858,4 +863,5 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
 
