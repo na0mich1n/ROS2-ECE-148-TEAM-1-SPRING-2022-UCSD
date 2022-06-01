@@ -30,6 +30,20 @@ class PathPlanner(Node):
             self.controller,
             10)
         self.subscription  # prevent unused variable warning
+        
+        #My personal attempt to subscribe to the LiDAR
+        self.sub = rospy.Subscriber(SUBSCRIBER_TOPIC_NAME, LaserScan, self.detect_obstacle)
+        self.sub #prevent unused variable warning
+        self.viewing_angle = 360
+        self.max_distance_tolerance = 1.2
+        self.min_distance_tolerance = 0.15
+        '''
+        For LD06
+        values at 0 degrees   ---> (straight)
+        values at 90 degrees  ---> (full right)
+        values at -90 degrees ---> (full left)
+        '''
+
 
         # Default actuator values
         self.declare_parameters(
