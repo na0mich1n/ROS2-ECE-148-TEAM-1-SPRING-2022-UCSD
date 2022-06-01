@@ -132,7 +132,7 @@ class PathPlanner(Node):
 
         # Publish values
         try:
-            if obstacle_detected == 0.1:
+            if obstacle_detected == 1.0:
                 #We are noe entering the part of the coder where we manuver around an object, these values can be tweaked
                 if min_angle > 0:
                     #Cone is to the left
