@@ -69,6 +69,9 @@ class LaneDetection(Node):
                 ('camera_right_width', 1),
                 ('camera_centerline',0.5),
                 ('debug_cv', 0)
+                ('crop_width_decimal', 0)
+                ('rows_to_watch_decimal', 0)
+                ('rows_offset_decimal', 0)
             ])
         self.Hue_low_gold = self.get_parameter('Hue_low_gold').value
         self.Hue_high_gold = self.get_parameter('Hue_high_gold').value
