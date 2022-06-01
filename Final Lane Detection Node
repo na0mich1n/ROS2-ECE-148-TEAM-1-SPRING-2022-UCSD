@@ -181,16 +181,16 @@ class LaneDetection(Node):
 
         # changing to black and white color space
         gray_upper = 255
-        (dummy, blackAndWhiteImage) = cv2.threshold(gray, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
+        (dummy, blackAndWhiteImage_gold) = cv2.threshold(gray, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
         
         # get rid of white noise from grass
         kernel = np.ones((self.kernal_size_gold, self.kernal_size_gold), np.uint8)
-        blurred = cv2.blur(blackAndWhiteImage,(self.kernal_size_gold, self.kernal_size_gold))
+        blurred = cv2.blur(blackAndWhiteImage_gold,(self.kernal_size_gold, self.kernal_size_gold))
         erosion = cv2.erode(blurred, kernel, iterations = self.erosion_itterations_gold)
         dilation = cv2.dilate(erosion, kernel, iterations = self.dilation_itterations_gold)
 
-        (dummy, blackAndWhiteImage) = cv2.threshold(dilation, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
-        contours, dummy = cv2.findContours(blackAndWhiteImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        (dummy, blackAndWhiteImage_gold) = cv2.threshold(dilation, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
+        contours, dummy = cv2.findContours(blackAndWhiteImage_gold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         # Defining points of a line to be drawn for visualizing error
         cam_center_line_x = int(self.image_width * self.camera_centerline)
@@ -308,7 +308,7 @@ class LaneDetection(Node):
         self.debug_cv = self.get_parameter('debug_cv').value # ability to update debug in real-time
         if self.debug_cv:
             cv2.imshow('img', img)
-            cv2.imshow('blackAndWhiteImage', blackAndWhiteImage)
+            cv2.imshow('blackAndWhiteImage_gold', blackAndWhiteImage_gold)
             cv2.waitKey(1)
         else:
             cv2.destroyAllWindows()
