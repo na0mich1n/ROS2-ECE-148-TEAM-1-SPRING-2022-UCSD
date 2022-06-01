@@ -114,7 +114,7 @@ class PathPlanner(Node):
         self.ek = data.data
         
         #This line of code gets the value contours_silver from msg.data
-        self.get_logger().info(msg.data)
+        self.get_logger().info(str(msg.data))
         contours_silver = float(msg.data)
 
         # Throttle gain scheduling (function of error)
