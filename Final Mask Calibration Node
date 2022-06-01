@@ -28,7 +28,7 @@ ACTUATOR_TOPIC_NAME = '/cmd_vel'
 IMG_WINDOW_NAME = 'img'
 BW_WINDOW_NAME_1 = 'blackAndWhiteImage_gold'
 BW_WINDOW_NAME_2 = 'blackAndWhiteImage_silver'
-MASK_WINDOW_NAME_1 = 'Golden_Mask'
+MASK_WINDOW_NAME_1 = 'Radiant_Golden_Mask'
 MASK_WINDOW_NAME_2 = 'Silver_Tear_Mask'
 THR_STR_WINDOW_NAME = 'throttle_and_steering'
 
