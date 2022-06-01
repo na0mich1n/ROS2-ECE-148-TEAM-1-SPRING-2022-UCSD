@@ -600,12 +600,6 @@ class Calibration(Node):
         contours_gold, dummy = cv2.findContours(blackAndWhiteImage_gold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contours_silver, dummy = cv2.findContours(blackAndWhiteImage_silver, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         
-        #My personal attampt at publishing the silver contour value 
-        msg = Float32()
-        msg.data = self.i
-        self.publisher_.publish(msg)
-        self.get_logger().info(msg.data)
-        self.i  = len(contours_silver)
         
         # Creating points to be drawn on image
         cam_center_line_x = int(image_width * self.camera_centerline)
@@ -870,4 +864,5 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
 
