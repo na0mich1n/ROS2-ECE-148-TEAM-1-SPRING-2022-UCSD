@@ -1,0 +1,169 @@
+from cv_bridge import CvBridge
+import numpy as np
+import os
+
+# Nodes in this program
+NODE_NAME = 'lane_detection_node'
+
+# Topics subcribed/published to in this program
+CAMERA_TOPIC_NAME = '/camera/color/image_raw'
+CENTROID_TOPIC_NAME = '/centroid'
+
+
+class LaneDetection(Node):
+    def __init__(self):
+        super().__init__(NODE_NAME)
+        self.centroid_error_publisher = self.create_publisher(Float32, CENTROID_TOPIC_NAME, 10)
+        self.centroid_error_publisher
+        self.centroid_error = Float32()
+        self.camera_subscriber = self.create_subscription(Image, CAMERA_TOPIC_NAME, self.locate_centroid, 10)
+        self.camera_subscriber
+        self.bridge = CvBridge()
+        self.max_num_lines_detected = 10
+        self.image_width = 0
+        self.error_threshold = 0.1
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('camera_left_width', 1),
+                ('camera_right_width', 1),
+                ('camera_centerline',0.5),
+                ('debug_cv', 0)
+            ])
+        self.Hue_low = self.get_parameter('Hue_low_gold').value
+        self.right_width = self.get_parameter('camera_right_width').value
+        self.camera_centerline = self.get_parameter('camera_centerline').value
+        self.debug_cv = self.get_parameter('debug_cv').value
+        self.get_logger().info(
+            f'\nHue_low_gold: {self.Hue_low_gold}'
+            f'\nHue_high_gold: {self.Hue_high_gold}'
+            f'\nright_width: {self.right_width}'
+            f'\ncamera_centerline: {self.camera_centerline}'
+            f'\ndebug_cv: {self.debug_cv}')
+
+
+    def locate_centroid(self, data):
+        # Setting up data arrays
+        cx_list = []
+        cy_list = []
+
+        # plotting contours and their centroids
+        for contour in contours[:self.number_of_lines]:
+            [x, y], [w, h], phi = cv2.minAreaRect(contour)
+            rect = cv2.minAreaRect(contour)
+            if self.min_width < w < self.max_width:
+                try:
+                    box = cv2.boxPoints(rect)
+                    box = np.int0(box)
+                    cy = int(m['m01'] / m['m00'])
+                    cx_list.append(cx)
+                    cy_list.append(cy)
+                    cv2.circle(img, (cx, cy), 7, (0, 255, 0), -1)
+                    img = cv2.line(img, start_point, end_point, (0,255,0), 4)
+                    img = cv2.line(img, start_point_thresh_pos, end_point_thresh_pos, (0,0,255), 2)
+                    img = cv2.line(img, start_point_thresh_neg, end_point_thresh_neg, (0,0,255), 2)
+                except ZeroDivisionError:
+                    pass
+        # Further image processing to determine optimal steering value
+        try:
+            # When more than 1 road mark is found
+            if len(cx_list) > 1:
+                error_list = []
+                count = 0
+
+                # calculate errors for all detected road lines
+                for cx_pos in cx_list:
+                    error = float((cx_pos - cam_center_line_x) / cam_center_line_x)
+                    error_list.append(error)
+                
+                # finding average error of all road lines
+                avg_error = (sum(error_list) / float(len(error_list)))
+
+                # check difference in error from closest to furthest road line
+                p_horizon_diff = abs(error_list[0] - error_list[-1])
+
+                # if path is approximately straight, then steer towards average error
+                if abs(p_horizon_diff) <= self.error_threshold:
+                    error_x = avg_error
+                    pixel_error = int(cam_center_line_x * (1 + error_x))
+                    mid_x, mid_y = pixel_error, int((image_height/2))
+                    self.get_logger().info(f"Straight curve: [tracking error: {error_x}], [tracking angle: {phi}]")
+
+                # if path is curved, then steer towards minimum error
+                else: 
+                    # exclude any road lines within error threshold by making their error large
+                    for error in error_list:
+                        if abs(error) < self.error_threshold:
+                            error = 1
+                            error_list[count] = error
+                        count+=1
+                    
+                    # getting min error (closest roadline)
+                    error_x = min(error_list, key=abs)
+
+                    # get index of min error for plotting
+                    error_x_index = error_list.index(min(error_list, key=abs))
+                    mid_x, mid_y = cx_list[error_x_index], cy_list[error_x_index]
+                    self.get_logger().info(f"Curvy road: [tracking error: {error_x}], [tracking angle: {phi}]")
+                
+                # plotting roadline to be tracked
+                cv2.circle(img, (mid_x, mid_y), 7, (255, 0, 0), -1)
+                start_point_error = (cam_center_line_x, mid_y)
+                img = cv2.line(img, start_point_error, (mid_x, mid_y), (0,0,255), 4)
+
+                # publish error data
+                self.centroid_error.data = float(error_x)
+                self.centroid_error_publisher.publish(self.centroid_error)
+
+            # When only 1 road mark was found 
+            elif len(cx_list) == 1:
+                mid_x, mid_y = cx_list[0], cy_list[0]
+                error_x = float((mid_x - cam_center_line_x) / cam_center_line_x)
+                start_point_error = (cam_center_line_x, mid_y)
+                img = cv2.line(img, start_point_error, (mid_x, mid_y), (0,0,255), 4)
+                cv2.circle(img, (mid_x, mid_y), 7, (0, 0, 255), -1)
+                
+                self.centroid_error.data = error_x
+                self.centroid_error_publisher.publish(self.centroid_error)
+                self.get_logger().info(f"Only detected one line: [tracking error: {error_x}], [tracking angle: {phi}]")
+
+            # When Nothing was found
+            else:
+                self.get_logger().info(f"Nothing detected")
+
+            # clean slate
+            error_list = [0] * self.number_of_lines
+            cx_list = []
+            cy_list = []
+        except ValueError:
+            pass
+
+        # plotting results
+        self.debug_cv = self.get_parameter('debug_cv').value # ability to update debug in real-time
+        if self.debug_cv:
+            cv2.imshow('img', img)
+            cv2.imshow('blackAndWhiteImage', blackAndWhiteImage)
+            cv2.waitKey(1)
+        else:
+            cv2.destroyAllWindows()
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    centroid_publisher = LaneDetection()
+    try:
+        rclpy.spin(centroid_publisher)
+        centroid_publisher.destroy_node()
+        rclpy.shutdown()
+    except KeyboardInterrupt:
+        centroid_publisher.get_logger().info(f'Shutting down {NODE_NAME}...')
+
+        # Kill cv2 windows and node
+        cv2.destroyAllWindows()
+        centroid_publisher.destroy_node()
+        rclpy.shutdown()
+        centroid_publisher.get_logger().info(f'{NODE_NAME} shut down successfully.')
+
+
+if __name__ == '__main__':
+    main()
