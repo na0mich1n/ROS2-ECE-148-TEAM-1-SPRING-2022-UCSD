@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32, Int32, Int32MultiArray
+from std_msgs.msg import Float32, Int32, Int32MultiArray, String
 from geometry_msgs.msg import Twist
 import time
 import os
@@ -25,9 +25,9 @@ class PathPlanner(Node):
         
         #My personal attempt at subscribing to data from the calibration node 
         self.subscription = self.create_subscription(
-            Float32,
+            String,
             CALIBRATION_NODE_NAME,
-            self.motion,
+            self.controller,
             10)
         self.subscription  # prevent unused variable warning
 
@@ -115,7 +115,7 @@ class PathPlanner(Node):
         
         #This line of code gets the value contours_silver from msg.data
         self.get_logger().info(msg.data)
-        contours_silver = msg.data
+        contours_silver = float(msg.data)
 
         # Throttle gain scheduling (function of error)
         self.inf_throttle = self.min_throttle - (self.min_throttle - self.max_throttle) / (1 - self.error_threshold)
