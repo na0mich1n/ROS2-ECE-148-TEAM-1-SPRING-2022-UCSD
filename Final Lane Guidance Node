@@ -175,13 +175,13 @@ class PathPlanner(Node):
                             self.twist_publisher.publish(self.twist_cmd)
             #Obstacle not detected, we can go forth with the follow the yellow line sequence
             else:
-            # publish control signals
-            self.twist_cmd.angular.z = steering_float
-            self.twist_cmd.linear.x = throttle_float
-            self.twist_publisher.publish(self.twist_cmd)
+                # publish control signals
+                self.twist_cmd.angular.z = steering_float
+                self.twist_cmd.linear.x = throttle_float
+                self.twist_publisher.publish(self.twist_cmd)
 
-            # shift current time and error values to previous values
-            self.ek_1 = self.ek
+                # shift current time and error values to previous values
+                self.ek_1 = self.ek
 
         except KeyboardInterrupt:
             self.twist_cmd.linear.x = self.zero_throttle
