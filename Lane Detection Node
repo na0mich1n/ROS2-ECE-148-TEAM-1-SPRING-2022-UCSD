@@ -68,7 +68,6 @@ class LaneDetection(Node):
                 ('camera_left_width', 1),
                 ('camera_right_width', 1),
                 ('camera_centerline',0.5),
-                #('debug_cv', 0)
                 ('crop_width_decimal', 0)
                 ('rows_to_watch_decimal', 0)
                 ('rows_offset_decimal', 0)
@@ -105,7 +104,6 @@ class LaneDetection(Node):
         self.rows_to_watch_decimal = self.get_parameter('rows_to_watch_decimal').value
         self.rows_offset_decimal = self.get_parameter('rows_offset_decimal').value
         self.camera_centerline = self.get_parameter('camera_centerline').value
-        #self.debug_cv = self.get_parameter('debug_cv').value
         
         self.camera_init = False
         
@@ -142,7 +140,6 @@ class LaneDetection(Node):
             f'\nrows_to_watch_decimal: {self.rows_to_watch_decimal}'
             f'\nrows_offset_decimal: {self.rows_offset_decimal}'
             f'\ncamera_centerline: {self.camera_centerline}'
-            #f'\ndebug_cv: {self.debug_cv}')
 
 
     def locate_centroid(self, data):
@@ -306,18 +303,7 @@ class LaneDetection(Node):
             cy_list = []
         except ValueError:
             pass
-
-"""
-        # plotting results
-        self.debug_cv = self.get_parameter('debug_cv').value # ability to update debug in real-time
-        if self.debug_cv:
-            cv2.imshow('img', img)
-            cv2.imshow('blackAndWhiteImage_gold', blackAndWhiteImage_gold)
-            cv2.waitKey(1)
-        else:
-            cv2.destroyAllWindows()
-"""
-
+        
 def main(args=None):
     rclpy.init(args=args)
     centroid_publisher = LaneDetection()
