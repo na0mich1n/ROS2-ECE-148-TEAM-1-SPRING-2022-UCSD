@@ -212,7 +212,7 @@ class Calibration(Node):
         self.publisher_ = self.create_publisher(Float32, CALIBRATION_NODE_NAME, 10)
         #timer_period = 0.5  # seconds
         #self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.i = 0.0
+        self.p = 0.0
         
         self.camera_subscriber = self.create_subscription(Image, CAMERA_TOPIC_NAME, self.live_calibration_values, 10)
         self.camera_subscriber
@@ -607,11 +607,11 @@ class Calibration(Node):
         
         #My personal attampt at publishing the silver contour value 
         msg = Float32()
-        msg.data = float(self.i)
+        msg.data = float(self.p)
         self.publisher_.publish(msg)
         string_contours = str(msg.data)
         self.get_logger().info(string_contours)
-        self.i  = len(contours_silver)
+        self.p  = len(contours_silver)
         
         
         # Creating points to be drawn on image
