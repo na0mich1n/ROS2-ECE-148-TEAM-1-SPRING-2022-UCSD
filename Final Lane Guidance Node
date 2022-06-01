@@ -32,7 +32,7 @@ class PathPlanner(Node):
         self.subscription  # prevent unused variable warning
         
         #My personal attempt to subscribe to the LiDAR
-        self.sub = rclpy.Subscriber(SUBSCRIBER_TOPIC_NAME, LaserScan, self.detect_obstacle)
+        self.sub = self.create_subscription(LaserScan, SUBSCRIBER_TOPIC_NAME, self.detect_obstacle, 10)
         self.sub #prevent unused variable warning
         self.viewing_angle = 360
         self.max_distance_tolerance = 1.2
