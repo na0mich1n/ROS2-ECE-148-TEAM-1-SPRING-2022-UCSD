@@ -208,7 +208,7 @@ class Calibration(Node):
         self.twist_publisher = self.create_publisher(Twist, ACTUATOR_TOPIC_NAME, 10)
         self.twist_cmd = Twist()
         
-        #My personal attempt at making this publish a specific value
+         #My personal attempt at making this publish a specific value
         self.publisher_ = self.create_publisher(Float32, CALIBRATION_NODE_NAME, 10)
         #timer_period = 0.5  # seconds
         #self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -607,7 +607,7 @@ class Calibration(Node):
         
         #My personal attampt at publishing the silver contour value 
         msg = Float32()
-        msg.data = self.i
+        msg.data = float(self.i)
         self.publisher_.publish(msg)
         string_contours = str(msg.data)
         self.get_logger().info(string_contours)
