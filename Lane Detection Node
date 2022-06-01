@@ -1,3 +1,8 @@
+import rclpy
+from rclpy.node import Node
+from sensor_msgs.msg import Image
+from std_msgs.msg import Float32, Int32, Int32MultiArray
+import cv2
 from cv_bridge import CvBridge
 import numpy as np
 import os
@@ -21,28 +26,189 @@ class LaneDetection(Node):
         self.bridge = CvBridge()
         self.max_num_lines_detected = 10
         self.image_width = 0
+        self.image_height = 0
+        self.start_height = 0
+        self.bottom_height = 0
+        self.left_width = 0
+        self.right_width = 0
         self.error_threshold = 0.1
         self.declare_parameters(
             namespace='',
             parameters=[
+                ('Hue_low_gold', 1),
+                ('Hue_high_gold', 1),
+                ('Saturation_low_gold', 1),
+                ('Saturation_high_gold', 1),
+                ('Value_low_gold', 1),
+                ('Value_high_gold', 1),
+                ('gray_lower_gold', 1),
+                ('inverted_filter_gold', 0),
+                ('kernal_size_gold',1),
+                ('erosion_itterations_gold',1),
+                ('dilation_itterations_gold',1),
+                
+                ('Hue_low_silver', 1),
+                ('Hue_high_silver', 1),
+                ('Saturation_low_silver', 1),
+                ('Saturation_high_silver', 1),
+                ('Value_low_silver', 1),
+                ('Value_high_silver', 1),
+                ('gray_lower_silver', 1),
+                ('inverted_filter_silver', 0),
+                ('kernal_size_silver',1),
+                ('erosion_itterations_silver',1),
+                ('dilation_itterations_silver',1),
+                
+                ('number_of_lines', 0),
+                ('error_threshold', 0),
+                ('Width_min', 1),
+                ('Width_max', 1),
+                ('camera_start_height', 1),
+                ('camera_bottom_height', 1),
                 ('camera_left_width', 1),
                 ('camera_right_width', 1),
                 ('camera_centerline',0.5),
-                ('debug_cv', 0)
+                #('debug_cv', 0)
+                ('crop_width_decimal', 0)
+                ('rows_to_watch_decimal', 0)
+                ('rows_offset_decimal', 0)
             ])
-        self.Hue_low = self.get_parameter('Hue_low').value
-        self.right_width = self.get_parameter('camera_right_width').value
+        self.Hue_low_gold = self.get_parameter('Hue_low_gold').value
+        self.Hue_high_gold = self.get_parameter('Hue_high_gold').value
+        self.Saturation_low_gold = self.get_parameter('Saturation_low_gold').value
+        self.Saturation_high_gold = self.get_parameter('Saturation_high_gold').value
+        self.Value_low_gold = self.get_parameter('Value_low_gold').value
+        self.Value_high_gold = self.get_parameter('Value_high_gold').value
+        self.gray_lower_gold = self.get_parameter('gray_lower_gold').value
+        self.inverted_filter_gold = self.get_parameter('inverted_filter_gold').value
+        self.kernal_size_gold = self.get_parameter('kernal_size_gold').value
+        self.erosion_itterations_gold = self.get_parameter('erosion_itterations_gold').value
+        self.dilation_itterations_gold = self.get_parameter('dilation_itterations_gold').value
+        
+        self.Hue_low_silver = self.get_parameter('Hue_low_silver').value
+        self.Hue_high_silver = self.get_parameter('Hue_high_silver').value
+        self.Saturation_low_silver = self.get_parameter('Saturation_low_silver').value
+        self.Saturation_high_silver = self.get_parameter('Saturation_high_silver').value
+        self.Value_low_silver = self.get_parameter('Value_low_silver').value
+        self.Value_high_silver = self.get_parameter('Value_high_silver').value
+        self.gray_lower_silver = self.get_parameter('gray_lower_silver').value
+        self.inverted_filter_silver = self.get_parameter('inverted_filter_silver').value
+        self.kernal_size_silver = self.get_parameter('kernal_size_silver').value
+        self.erosion_itterations_silver = self.get_parameter('erosion_itterations_silver').value
+        self.dilation_itterations_silver = self.get_parameter('dilation_itterations_silver').value
+        
+        self.number_of_lines = self.get_parameter('number_of_lines').value
+        self.error_threshold = self.get_parameter('error_threshold').value
+        self.min_width = self.get_parameter('Width_min').value
+        self.max_width = self.get_parameter('Width_max').value
+        self.crop_width_decimal = self.get_parameter('crop_width_decimal').value
+        self.rows_to_watch_decimal = self.get_parameter('rows_to_watch_decimal').value
+        self.rows_offset_decimal = self.get_parameter('rows_offset_decimal').value
         self.camera_centerline = self.get_parameter('camera_centerline').value
-        self.debug_cv = self.get_parameter('debug_cv').value
+        #self.debug_cv = self.get_parameter('debug_cv').value
+        
+        self.camera_init = False
+        
         self.get_logger().info(
-            f'\nHue_low: {self.Hue_low}'
-            f'\nHue_high: {self.Hue_high}'
-            f'\nright_width: {self.right_width}'
+            f'\nHue_low_gold: {self.Hue_low_gold}'
+            f'\nHue_high_gold: {self.Hue_high_gold}'
+            f'\nSaturation_low_gold: {self.Saturation_low_gold}'
+            f'\nSaturation_high_gold: {self.Saturation_high_gold}'
+            f'\nValue_low_gold: {self.Value_low_gold}'
+            f'\nValue_high_gold: {self.Value_high_gold}'
+            f'\ngray_lower_gold: {self.gray_lower_gold}'
+            f'\ninverted_filter_gold: {self.inverted_filter_gold}'
+            f'\nkernal_size_gold: {self.kernal_size_gold}'
+            f'\nerosion_itterations_gold: {self.erosion_itterations_gold}'
+            f'\ndilation_itterations_gold: {self.dilation_itterations_gold}'
+            
+            f'\nHue_low_silver: {self.Hue_low_silver}'
+            f'\nHue_high_silver: {self.Hue_high_silver}'
+            f'\nSaturation_low_silver: {self.Saturation_low_silver}'
+            f'\nSaturation_high_silver: {self.Saturation_high_silver}'
+            f'\nValue_low_silver: {self.Value_low_silver}'
+            f'\nValue_high_silver: {self.Value_high_silver}'
+            f'\ngray_lower_silver: {self.gray_lower_silver}'
+            f'\ninverted_filter_silver: {self.inverted_filter_silver}'
+            f'\nkernal_size_silver: {self.kernal_size_silver}'
+            f'\nerosion_itterations_silver: {self.erosion_itterations_silver}'
+            f'\ndilation_itterations_silver: {self.dilation_itterations_silver}'
+            
+            f'\nnumber_of_lines: {self.number_of_lines}'
+            f'\nerror_threshold: {self.error_threshold}'
+            f'\nmin_width: {self.min_width}'
+            f'\nmax_width: {self.max_width}'
+            f'\ncrop_width_decimal: {self.crop_width_decimal}'
+            f'\nrows_to_watch_decimal: {self.rows_to_watch_decimal}'
+            f'\nrows_offset_decimal: {self.rows_offset_decimal}'
             f'\ncamera_centerline: {self.camera_centerline}'
-            f'\ndebug_cv: {self.debug_cv}')
+            #f'\ndebug_cv: {self.debug_cv}')
 
 
     def locate_centroid(self, data):
+        # Image processing from rosparams
+        frame = self.bridge.imgmsg_to_cv2(data)
+        if not self.camera_init:
+            self.get_logger().info(f'\n Initializing Camera...')
+            height, width, channels = frame.shape
+        
+            # Vertical crop/pan
+            rows_to_watch = int(height * self.rows_to_watch_decimal)
+            rows_offset = int(height * (1 - self.rows_offset_decimal))
+
+            # Horizontal crop
+            self.start_height = int(height - rows_offset)
+            self.bottom_height = int(start_height + rows_to_watch)
+            self.left_width = int((width / 2) * (1 - self.crop_width_decimal))
+            self.right_width = int((width / 2) * (1 + self.crop_width_decimal))
+            self.camera_init = True
+            self.get_logger().info(f'\n Camera Initialized')
+
+        self.image_width = int(self.right_width - self.left_width)
+        self.image_height = self.bottom_height-self.start_height
+        img = frame[self.start_height:self.bottom_height, self.left_width:self.right_width]
+
+        # changing color space to HSV
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        lower = np.array([self.Hue_low_gold, self.Saturation_low_gold, self.Value_low_gold])
+        upper = np.array([self.Hue_high_gold, self.Saturation_high_gold, self.Value_high_gold])
+        mask = cv2.inRange(hsv, lower, upper)
+
+        if self.inverted_filter == 1:
+            bitwise_mask = cv2.bitwise_and(hsv, hsv, mask=cv2.bitwise_not(mask))
+        else:
+            bitwise_mask = cv2.bitwise_and(hsv, hsv, mask=mask)
+
+        # changing to gray color space
+        gray = cv2.cvtColor(bitwise_mask, cv2.COLOR_BGR2GRAY)
+
+        # changing to black and white color space
+        gray_upper = 255
+        (dummy, blackAndWhiteImage_gold) = cv2.threshold(gray, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
+        
+        # get rid of white noise from grass
+        kernel = np.ones((self.kernal_size_gold, self.kernal_size_gold), np.uint8)
+        blurred = cv2.blur(blackAndWhiteImage_gold,(self.kernal_size_gold, self.kernal_size_gold))
+        erosion = cv2.erode(blurred, kernel, iterations = self.erosion_itterations_gold)
+        dilation = cv2.dilate(erosion, kernel, iterations = self.dilation_itterations_gold)
+
+        (dummy, blackAndWhiteImage_gold) = cv2.threshold(dilation, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
+        contours, dummy = cv2.findContours(blackAndWhiteImage_gold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        # Defining points of a line to be drawn for visualizing error
+        cam_center_line_x = int(self.image_width * self.camera_centerline)
+        start_point = (cam_center_line_x,0)
+        end_point = (cam_center_line_x, int(self.bottom_height))
+        
+        start_point_thresh_pos_x = int(cam_center_line_x -  (self.error_threshold * self.image_width/2))
+        start_point_thresh_neg_x = int(cam_center_line_x + (self.error_threshold * self.image_width/2))
+        
+        start_point_thresh_pos = (start_point_thresh_pos_x, 0)
+        end_point_thresh_pos = (start_point_thresh_pos_x, int(self.bottom_height))
+
+        start_point_thresh_neg = (start_point_thresh_neg_x, 0)
+        end_point_thresh_neg = (start_point_thresh_neg_x, int(self.bottom_height))
+
         # Setting up data arrays
         cx_list = []
         cy_list = []
@@ -55,6 +221,9 @@ class LaneDetection(Node):
                 try:
                     box = cv2.boxPoints(rect)
                     box = np.int0(box)
+                    img = cv2.drawContours(img,[box], 0, (0, 255, 0), 3)
+                    m = cv2.moments(contour)
+                    cx = int(m['m10'] / m['m00'])
                     cy = int(m['m01'] / m['m00'])
                     cx_list.append(cx)
                     cy_list.append(cy)
@@ -86,7 +255,7 @@ class LaneDetection(Node):
                 if abs(p_horizon_diff) <= self.error_threshold:
                     error_x = avg_error
                     pixel_error = int(cam_center_line_x * (1 + error_x))
-                    mid_x, mid_y = pixel_error, int((image_height/2))
+                    mid_x, mid_y = pixel_error, int((self.image_height/2))
                     self.get_logger().info(f"Straight curve: [tracking error: {error_x}], [tracking angle: {phi}]")
 
                 # if path is curved, then steer towards minimum error
@@ -138,15 +307,16 @@ class LaneDetection(Node):
         except ValueError:
             pass
 
+"""
         # plotting results
         self.debug_cv = self.get_parameter('debug_cv').value # ability to update debug in real-time
         if self.debug_cv:
             cv2.imshow('img', img)
-            cv2.imshow('blackAndWhiteImage', blackAndWhiteImage)
+            cv2.imshow('blackAndWhiteImage_gold', blackAndWhiteImage_gold)
             cv2.waitKey(1)
         else:
             cv2.destroyAllWindows()
-
+"""
 
 def main(args=None):
     rclpy.init(args=args)
