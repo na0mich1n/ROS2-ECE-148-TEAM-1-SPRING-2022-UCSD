@@ -609,7 +609,7 @@ class Calibration(Node):
         msg = Float32()
         msg.data = self.i
         self.publisher_.publish(msg)
-        self.get_logger().info(msg.data)
+        self.get_logger().info(str(msg.data))
         self.i  = len(contours_silver)
         
         
