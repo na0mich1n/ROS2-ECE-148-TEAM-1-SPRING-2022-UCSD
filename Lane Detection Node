@@ -139,8 +139,7 @@ class LaneDetection(Node):
             f'\ncrop_width_decimal: {self.crop_width_decimal}'
             f'\nrows_to_watch_decimal: {self.rows_to_watch_decimal}'
             f'\nrows_offset_decimal: {self.rows_offset_decimal}'
-            f'\ncamera_centerline: {self.camera_centerline}'
-        ])
+            f'\ncamera_centerline: {self.camera_centerline}')
 
     def locate_centroid(self, data):
         # Image processing from rosparams
