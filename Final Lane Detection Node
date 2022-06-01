@@ -55,6 +55,9 @@ class LaneDetection(Node):
                 try:
                     box = cv2.boxPoints(rect)
                     box = np.int0(box)
+                    img = cv2.drawContours(img,[box], 0, (0, 255, 0), 3)
+                    m = cv2.moments(contour)
+                    cx = int(m['m10'] / m['m00'])
                     cy = int(m['m01'] / m['m00'])
                     cx_list.append(cx)
                     cy_list.append(cy)
