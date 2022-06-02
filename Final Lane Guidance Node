@@ -8,7 +8,10 @@ import os
 from sensor_msgs.msg import LaserScan
 import math
 
+#Node for this program
 NODE_NAME = 'lane_guidance_node'
+
+LD_NODE_NAME = 'lane_detection_node'
 CENTROID_TOPIC_NAME = '/centroid'
 ACTUATOR_TOPIC_NAME = '/cmd_vel'
 CALIBRATION_NODE_NAME = 'calibration_node'
@@ -26,7 +29,7 @@ class PathPlanner(Node):
         #My personal attempt at subscribing to data from the calibration node 
         self.subscription = self.create_subscription(
             String,
-            CALIBRATION_NODE_NAME,
+            LD_NODE_NAME,
             self.controller,
             10)
         self.subscription  # prevent unused variable warning
@@ -37,6 +40,7 @@ class PathPlanner(Node):
         self.viewing_angle = 360
         self.max_distance_tolerance = 1.2
         self.min_distance_tolerance = 0.15
+        
         '''
         For LD06
         values at 0 degrees   ---> (straight)
