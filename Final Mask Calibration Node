@@ -28,7 +28,7 @@ ACTUATOR_TOPIC_NAME = '/cmd_vel'
 IMG_WINDOW_NAME = 'img'
 BW_WINDOW_NAME_1 = 'blackAndWhiteImage_gold'
 BW_WINDOW_NAME_2 = 'blackAndWhiteImage_silver'
-MASK_WINDOW_NAME_1 = 'Radiant_Golden_Mask'
+MASK_WINDOW_NAME_1 = 'Golden_Mask'
 MASK_WINDOW_NAME_2 = 'Silver_Tear_Mask'
 THR_STR_WINDOW_NAME = 'throttle_and_steering'
 
@@ -208,11 +208,13 @@ class Calibration(Node):
         self.twist_publisher = self.create_publisher(Twist, ACTUATOR_TOPIC_NAME, 10)
         self.twist_cmd = Twist()
         
-         #My personal attempt at making this publish a specific value
+        '''
+        #My personal attempt at making this publish a specific value
         self.publisher_ = self.create_publisher(Float32, CALIBRATION_NODE_NAME, 10)
         #timer_period = 0.5  # seconds
         #self.timer = self.create_timer(timer_period, self.timer_callback)
         self.p = 0.0
+        '''
         
         self.camera_subscriber = self.create_subscription(Image, CAMERA_TOPIC_NAME, self.live_calibration_values, 10)
         self.camera_subscriber
@@ -580,8 +582,8 @@ class Calibration(Node):
 
         # Changing to black and white color space
         gray_upper = 255
-        (dummy, blackAndWhiteImage_gold) = cv2.threshold(gray_gold, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
-        (dummy, blackAndWhiteImage_silver) = cv2.threshold(gray_silver, self.gray_lower_silver, gray_upper, cv2.THRESH_BINARY)
+        (dummy_gold, blackAndWhiteImage_gold) = cv2.threshold(gray_gold, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
+        (dummy_silver, blackAndWhiteImage_silver) = cv2.threshold(gray_silver, self.gray_lower_silver, gray_upper, cv2.THRESH_BINARY)
         # blackAndWhiteImage = cv2.adaptiveThreshold(gray, gray_upper, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
         
         # Get rid of white noise from grass
@@ -598,13 +600,14 @@ class Calibration(Node):
         
 
         # Black and white image
-        (dummy, blackAndWhiteImage_gold) = cv2.threshold(dilation_gold, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
-        (dummy, blackAndWhiteImage_silver) = cv2.threshold(dilation_silver, self.gray_lower_silver, gray_upper, cv2.THRESH_BINARY)
+        (dummy_gold, blackAndWhiteImage_gold) = cv2.threshold(dilation_gold, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
+        (dummy_silver, blackAndWhiteImage_silver) = cv2.threshold(dilation_silver, self.gray_lower_silver, gray_upper, cv2.THRESH_BINARY)
 
         # Finding contours in image
-        contours_gold, dummy = cv2.findContours(blackAndWhiteImage_gold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        contours_silver, dummy = cv2.findContours(blackAndWhiteImage_silver, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours_gold, dummy_gold = cv2.findContours(blackAndWhiteImage_gold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours_silver, dummy_silver = cv2.findContours(blackAndWhiteImage_silver, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         
+        '''
         #My personal attampt at publishing the silver contour value 
         msg = Float32()
         msg.data = float(self.p)
@@ -612,7 +615,7 @@ class Calibration(Node):
         string_contours = str(msg.data)
         self.get_logger().info(string_contours)
         self.p  = len(contours_silver)
-        
+       ''' 
         
         # Creating points to be drawn on image
         cam_center_line_x = int(image_width * self.camera_centerline)
