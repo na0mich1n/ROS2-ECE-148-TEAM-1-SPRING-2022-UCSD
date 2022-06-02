@@ -117,7 +117,7 @@ class LaneDetection(Node):
         upper = np.array([self.Hue_high_gold, self.Saturation_high_gold, self.Value_high_gold])
         mask = cv2.inRange(hsv, lower, upper)
 
-        if self.inverted_filter == 1:
+        if self.inverted_filter_gold == 1:
             bitwise_mask = cv2.bitwise_and(hsv, hsv, mask=cv2.bitwise_not(mask))
         else:
             bitwise_mask = cv2.bitwise_and(hsv, hsv, mask=mask)
