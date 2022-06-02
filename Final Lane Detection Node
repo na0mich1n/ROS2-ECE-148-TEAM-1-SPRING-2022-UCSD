@@ -42,6 +42,18 @@ class LaneDetection(Node):
                 ('erosion_itterations_gold',1),
                 ('dilation_itterations_gold',1),
                 
+                ('Hue_low_silver', 1),
+                ('Hue_high_silver', 1),
+                ('Saturation_low_silver', 1),
+                ('Saturation_high_silver', 1),
+                ('Value_low_silver', 1),
+                ('Value_high_silver', 1),
+                ('gray_lower_silver', 1),
+                ('inverted_filter_silver', 0),
+                ('kernal_size_silver',1),
+                ('erosion_itterations_silver',1),
+                ('dilation_itterations_silver',1),
+                
                 ('number_of_lines', 0),
                 ('error_threshold', 0),
                 ('Width_min', 1),
@@ -65,6 +77,18 @@ class LaneDetection(Node):
         self.erosion_itterations_gold = self.get_parameter('erosion_itterations_gold').value
         self.dilation_itterations_gold = self.get_parameter('dilation_itterations_gold').value
         
+        self.Hue_low_silver = self.get_parameter('Hue_low_silver').value
+        self.Hue_high_silver = self.get_parameter('Hue_high_silver').value
+        self.Saturation_low_silver = self.get_parameter('Saturation_low_silver').value
+        self.Saturation_high_silver = self.get_parameter('Saturation_high_silver').value
+        self.Value_low_silver = self.get_parameter('Value_low_silver').value
+        self.Value_high_silver = self.get_parameter('Value_high_silver').value
+        self.gray_lower_silver = self.get_parameter('gray_lower_silver').value
+        self.inverted_filter_silver = self.get_parameter('inverted_filter_silver').value
+        self.kernal_size_silver = self.get_parameter('kernal_size_silver').value
+        self.erosion_itterations_silver = self.get_parameter('erosion_itterations_silver').value
+        self.dilation_itterations_silver = self.get_parameter('dilation_itterations_silver').value
+        
         self.number_of_lines = self.get_parameter('number_of_lines').value
         self.error_threshold = self.get_parameter('error_threshold').value
         self.min_width = self.get_parameter('Width_min').value
@@ -87,6 +111,18 @@ class LaneDetection(Node):
             f'\nkernal_size_gold: {self.kernal_size_gold}'
             f'\nerosion_itterations_gold: {self.erosion_itterations_gold}'
             f'\ndilation_itterations_gold: {self.dilation_itterations_gold}'
+            
+            f'\nHue_low_silver: {self.Hue_low_silver}'
+            f'\nHue_high_silver: {self.Hue_high_silver}'
+            f'\nSaturation_low_silver: {self.Saturation_low_silver}'
+            f'\nSaturation_high_silver: {self.Saturation_high_silver}'
+            f'\nValue_low_silver: {self.Value_low_silver}'
+            f'\nValue_high_silver: {self.Value_high_silver}'
+            f'\ngray_lower_silver: {self.gray_lower_silver}'
+            f'\ninverted_filter_silver: {self.inverted_filter_silver}'
+            f'\nkernal_size_silver: {self.kernal_size_silver}'
+            f'\nerosion_itterations_silver: {self.erosion_itterations_silver}'
+            f'\ndilation_itterations_silver: {self.dilation_itterations_silver}'
             
             f'\nnumber_of_lines: {self.number_of_lines}'
             f'\nerror_threshold: {self.error_threshold}'
@@ -113,31 +149,52 @@ class LaneDetection(Node):
 
         # changing color space to HSV
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        lower = np.array([self.Hue_low_gold, self.Saturation_low_gold, self.Value_low_gold])
-        upper = np.array([self.Hue_high_gold, self.Saturation_high_gold, self.Value_high_gold])
-        mask = cv2.inRange(hsv, lower, upper)
+        lower_gold = np.array([self.Hue_low_gold, self.Saturation_low_gold, self.Value_low_gold])
+        upper_gold = np.array([self.Hue_high_gold, self.Saturation_high_gold, self.Value_high_gold])
+        mask_gold = cv2.inRange(hsv, lower_gold, upper_gold)
+        
+        lower_silver = np.array([self.Hue_low_silver, self.Saturation_low_silver, self.Value_low_silver])
+        upper_silver = np.array([self.Hue_high_silver, self.Saturation_high_silver, self.Value_high_silver])
+        mask_silver = cv2.inRange(hsv, lower_silver, upper_silver)
 
         if self.inverted_filter_gold == 1:
-            bitwise_mask = cv2.bitwise_and(hsv, hsv, mask=cv2.bitwise_not(mask))
+            bitwise_mask_gold = cv2.bitwise_and(hsv, hsv, mask=cv2.bitwise_not(mask_gold))
         else:
-            bitwise_mask = cv2.bitwise_and(hsv, hsv, mask=mask)
+            bitwise_mask_gold = cv2.bitwise_and(hsv, hsv, mask=mask_gold)
+            
+            
+        if self.inverted_filter_silver == 1:
+            bitwise_mask_silver = cv2.bitwise_and(hsv, hsv, mask=cv2.bitwise_not(mask_silver))
+        else:
+            bitwise_mask_silver = cv2.bitwise_and(hsv, hsv, mask=mask_silver)
+
 
         # changing to gray color space
-        gray = cv2.cvtColor(bitwise_mask, cv2.COLOR_BGR2GRAY)
+        gray_gold = cv2.cvtColor(bitwise_mask_gold, cv2.COLOR_BGR2GRAY)
+        gray_silver = cv2.cvtColor(bitwise_mask_silver, cv2.COLOR_BGR2GRAY)
 
         # changing to black and white color space
         gray_upper = 255
-        (dummy, blackAndWhiteImage) = cv2.threshold(gray, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
-
+        (dummy_gold, blackAndWhiteImage_gold) = cv2.threshold(gray_gold, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
+        (dummy_silver, blackAndWhiteImage_silver) = cv2.threshold(gray_silver, self.gray_lower_silver, gray_upper, cv2.THRESH_BINARY)
+        
         # get rid of white noise from grass
-        kernel = np.ones((self.kernal_size, self.kernal_size), np.uint8)
-        blurred = cv2.blur(blackAndWhiteImage,(self.kernal_size, self.kernal_size))
-        erosion = cv2.erode(blurred, kernel, iterations = self.erosion_itterations_gold)
-        dilation = cv2.dilate(erosion, kernel, iterations = self.dilation_itterations_gold)
+        kernel_gold = np.ones((self.kernal_size_gold, self.kernal_size_gold), np.uint8)
+        blurred_gold = cv2.blur(blackAndWhiteImage_gold,(self.kernal_size_gold, self.kernal_size_gold))
+        erosion_gold = cv2.erode(blurred_gold, kernel_gold, iterations = self.erosion_itterations_gold)
+        dilation_gold = cv2.dilate(erosion_gold, kernel_gold, iterations = self.dilation_itterations_gold)
+        
+        kernel_silver = np.ones((self.kernal_size_silver, self.kernal_size_silver), np.uint8)
+        blurred_silver = cv2.blur(blackAndWhiteImage_silver,(self.kernal_size_silver, self.kernal_size_silver))
+        erosion_silver = cv2.erode(blurred_silver, kernel_silver, iterations = self.erosion_itterations_silver)
+        dilation_silver = cv2.dilate(erosion_silver, kernel_silver, iterations = self.dilation_itterations_silver)
 
-        (dummy, blackAndWhiteImage) = cv2.threshold(dilation, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
-        contours, dummy = cv2.findContours(blackAndWhiteImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        (dummy_gold, blackAndWhiteImage_gold) = cv2.threshold(dilation_gold, self.gray_lower_gold, gray_upper, cv2.THRESH_BINARY)
+        contours_gold, dummy_gold = cv2.findContours(blackAndWhiteImage_gold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
+        (dummy_silver, blackAndWhiteImage_silver) = cv2.threshold(dilation_silver, self.gray_lower_silver, gray_upper, cv2.THRESH_BINARY)
+        contours_silver, dummy_silver = cv2.findContours(blackAndWhiteImage_silver, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        
         # Defining points of a line to be drawn for visualizing error
         cam_center_line_x = int(self.image_width * self.camera_centerline)
         start_point = (cam_center_line_x,0)
@@ -157,7 +214,7 @@ class LaneDetection(Node):
         cy_list = []
 
         # plotting contours and their centroids
-        for contour in contours[:self.number_of_lines]:
+        for contour in contours_gold[:self.number_of_lines]:
             [x, y], [w, h], phi = cv2.minAreaRect(contour)
             rect = cv2.minAreaRect(contour)
             if self.min_width < w < self.max_width:
@@ -254,7 +311,8 @@ class LaneDetection(Node):
         self.debug_cv = self.get_parameter('debug_cv').value # ability to update debug in real-time
         if self.debug_cv:
             cv2.imshow('img', img)
-            cv2.imshow('blackAndWhiteImage', blackAndWhiteImage)
+            cv2.imshow('blackAndWhiteImage_gold', blackAndWhiteImage_gold)
+            cv2.imshow('blackAndWhiteImage_silver', blackAndWhiteImage_silver)
             cv2.waitKey(1)
         else:
             cv2.destroyAllWindows()
