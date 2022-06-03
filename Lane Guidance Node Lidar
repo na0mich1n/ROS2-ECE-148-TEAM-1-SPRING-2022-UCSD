@@ -15,7 +15,7 @@ LD_NODE_NAME = 'lane_detection_node'
 CENTROID_TOPIC_NAME = '/centroid'
 ACTUATOR_TOPIC_NAME = '/cmd_vel'
 CALIBRATION_NODE_NAME = 'calibration_node'
-SUBSCRIBER_TOPIC_NAME = '/LiDAR/LD06'
+SUBSCRIBER_TOPIC_NAME = '/scan'
 
 
 class PathPlanner(Node):
