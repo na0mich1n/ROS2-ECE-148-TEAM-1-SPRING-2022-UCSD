@@ -38,6 +38,10 @@ class PathPlanner(Node):
         self.publisher_ = self.create_publisher(Float32, NODE_NAME , 10)
         self.i = 0.0
         
+        #for obstacle detection function
+        self.obstacle_detected = 0.0
+        self.contours_silver = 0.0
+        
         #My personal attempt to subscribe to the LiDAR
         self.sub = self.create_subscription(LaserScan, SUBSCRIBER_TOPIC_NAME, self.detect_obstacle, 10)
         self.sub #prevent unused variable warning
@@ -122,27 +126,28 @@ class PathPlanner(Node):
             if min_angle > 180: min_angle = min_angle - 360
             angle_rad = (min_angle * math.pi) / 180
             normalized_angle = math.sin(angle_rad)
-            obstacle_detected = 1.0
+            self.obstacle_detected = 1.0
         else:
             # nonsense values
             min_distance = -1.0
             normalized_angle = -1.0
-            obstacle_detected = 0.0
+            self.obstacle_detected = 0.0
             
         #My personal attampt at publishing the obstacle_detected value 
         obst = Float32()
         obst.data = float(self.i)
         self.publisher_.publish(obst)
         obstacle_string = str(obst.data)
-        self.i = obstacle_detected
+        self.i = self.obstacle_detected
     
-    def controller(self, data, msg):
-        # setting up PID control
-        self.ek = data.data
-        
+    def GettingContours(self, msg):
         #This line of code gets the value contours_silver from msg.data
         self.get_logger().info(str(msg.data))
-        contours_silver = float(msg.data)
+        self.contours_silver = float(msg.data)
+        
+    def controller(self, data):
+        # setting up PID control
+        self.ek = data.data
 
         # Throttle gain scheduling (function of error)
         self.inf_throttle = self.min_throttle - (self.min_throttle - self.max_throttle) / (1 - self.error_threshold)
@@ -159,7 +164,7 @@ class PathPlanner(Node):
 
         # Publish values
         try:
-            if obstacle_detected == 1.0:
+            if self.obstacle_detected == 1.0:
                 #We are noe entering the part of the coder where we manuver around an object, these values can be tweaked
                 if min_angle > 0:
                     #Cone is to the left
@@ -175,7 +180,7 @@ class PathPlanner(Node):
                         self.twist_publisher.publish(self.twist_cmd)
                 else:
                     #Cone is strait ahead or to the right
-                    if contours_silver > 3:
+                    if self.contours_silver > 3:
                         #The white line is dotted and we can go to the right 
                         abs_min_angle = abs(min_angle) #This is to take into account that the angle will be negative if the object is to the left
                         if abs_min_angle < 60:
