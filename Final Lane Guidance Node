@@ -150,6 +150,7 @@ class PathPlanner(Node):
 
         # Publish values
         try:
+            self.get_logger().info(f"CHECKING IF OBJECT IS DETECTED")
             if obstacle_detected == 1.0:
                 self.get_logger().info(f"OBJECT DETECTED")
                 #We are noe entering the part of the coder where we manuver around an object, these values can be tweaked
