@@ -108,7 +108,7 @@ class PathPlanner(Node):
     #Here is a funciton I added for obstacle detection
     def detect_obstacle(self, data):
         #CODE THAT I PUT IN 
-        self.obstacle_ranges = data.ranges
+        self.obstacle_ranges = data.ranges[len(data.ranges)]
         #END OF CODE THAT I PUT IN 
         
         total_number_of_scans = len(data.ranges)
@@ -140,10 +140,10 @@ class PathPlanner(Node):
             
         #My personal attampt at publishing the obstacle_detected value 
         obst = Float32()
-        obst.data = float(self.i[len(self.i)])
+        obst.data = float(self.i)
         self.publisher_.publish(obst)
         obstacle_string = str(obst.data)
-        self.i = self.obstacle_ranges[len(self.obstacle_ranges)]
+        self.i = self.obstacle_ranges
         
     def GettingContours(self, msg):
         #This line of code gets the value contours_silver from msg.data
