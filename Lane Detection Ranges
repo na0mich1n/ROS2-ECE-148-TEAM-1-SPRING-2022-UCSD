@@ -160,7 +160,7 @@ class LaneDetection(Node):
        self.obstacle_value = float(obst.data)
         
     def locate_centroid(self, data):
-        self.get_logger().info('Obstacle Detection Ranges: "%s"' % str(self.obstacle_value))
+       # self.get_logger().info('Obstacle Detection Ranges: "%s"' % str(self.obstacle_value))
         # Image processing from rosparams
         frame = self.bridge.imgmsg_to_cv2(data)
 
