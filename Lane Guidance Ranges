@@ -108,7 +108,7 @@ class PathPlanner(Node):
     #Here is a funciton I added for obstacle detection
     def detect_obstacle(self, data):
         #CODE THAT I PUT IN 
-        self.obstacle_ranges = data.ranges[len(data.ranges)]
+        self.obstacle_ranges = data.ranges[len(data.ranges) - 1]
         #END OF CODE THAT I PUT IN 
         
         total_number_of_scans = len(data.ranges)
