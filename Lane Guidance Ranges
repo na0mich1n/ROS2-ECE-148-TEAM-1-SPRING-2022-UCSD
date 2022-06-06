@@ -140,7 +140,7 @@ class PathPlanner(Node):
             
         #My personal attampt at publishing the obstacle_detected value 
         obst = Float32()
-        obst.data = float(self.i)
+        obst.data = float(self.i[len(self.i)])
         self.publisher_.publish(obst)
         obstacle_string = str(obst.data)
         self.i = self.obstacle_ranges[len(self.obstacle_ranges)]
