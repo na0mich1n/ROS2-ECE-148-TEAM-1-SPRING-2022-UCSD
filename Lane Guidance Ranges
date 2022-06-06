@@ -113,7 +113,8 @@ class PathPlanner(Node):
         
         total_number_of_scans = len(data.ranges)
         scans_per_degree = float(total_number_of_scans/self.viewing_angle)
-        angle_values = [1,5,10,15,20,25,30,35,40,45,50,55,60,65,355,350,345,340,335,330,325,320,315,310,305,300,295]
+        #angle_values = [1,5,10,15,20,25,30,35,40,45,50,55,60,65,355,350,345,340,335,330,325,320,315,310,305,300,295]
+        angle_values = [1,5,10,15,20,355,350,345,340,335,330]
         range_values = []
         for angle in angle_values:
             bs = data.ranges[round(angle*scans_per_degree)]
