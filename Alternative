@@ -158,7 +158,7 @@ class LaneDetection(Node):
 
         # Defining points of a line to be drawn for visualizing error
         if(time()-self.sTime<6):
-            cam_center_line_x = int(self.image_width * 24)
+            cam_center_line_x = int(self.image_width * 16)
         else:
             cam_center_line_x = int(self.image_width * 60)
 
