@@ -138,10 +138,10 @@ class LaneDetection(Node):
         contours, dummy = cv2.findContours(blackAndWhiteImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         # Defining points of a line to be drawn for visualizing error
-        if(time()-self.sTime<6):
-            cam_center_line_x = int(self.image_width * 0.2)
-        else:
+        if 7<time()-self.sTime<11:
             cam_center_line_x = int(self.image_width * 0.6)
+        else:
+            cam_center_line_x = int(self.image_width * 0.2)
         #cam_center_line_x = int(self.image_width * self.camera_centerline)
         start_point = (cam_center_line_x,0)
         end_point = (cam_center_line_x, int(self.bottom_height))
